@@ -8,54 +8,11 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("defaultPlaybackSpeed") private var defaultPlaybackSpeed: Double = 1.0
-    @AppStorage("smartRewindEnabled") private var smartRewindEnabled = true
-    
     @State private var showingAbout = false
-    @State private var showingClearProgress = false
     
     var body: some View {
         NavigationStack {
             List {
-                // Playback Settings
-                Section("Playback") {
-                    HStack {
-                        Text("Default Speed")
-                        Spacer()
-                        Text("\(defaultPlaybackSpeed, specifier: "%.1f")×")
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Slider(value: $defaultPlaybackSpeed, in: 0.5...3.0, step: 0.1)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Toggle("Smart Rewind", isOn: $smartRewindEnabled)
-                        Text("Automatically rewinds a few seconds when resuming playback")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                // Library Settings
-                Section("Library") {
-                    NavigationLink("File Management") {
-                        FileManagementView()
-                    }
-                    
-                    Button("Clear All Progress") {
-                        showingClearProgress = true
-                    }
-                    .foregroundColor(.red)
-                }
-                
-                // Interface Settings
-                Section("Interface") {
-                    NavigationLink("Appearance") {
-                        AppearanceSettingsView()
-                    }
-                }
-                
                 // Support & Info
                 Section("Support") {
                     NavigationLink("Help & FAQ") {
@@ -75,131 +32,14 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
-            .alert("Clear All Progress", isPresented: $showingClearProgress) {
-                Button("Clear All", role: .destructive) {
-                    clearAllProgress()
-                }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("This will reset the listening progress for all audiobooks. This action cannot be undone.")
-            }
         }
     }
-    
-    private func clearAllProgress() {
-        // TODO: Implement clearing all progress
-        print("Clearing all progress...")
-    }
+
 }
 
 
 
-struct FileManagementView: View {
-    @State private var storageUsed: String = "Calculating..."
-    @State private var showingClearCache = false
-    
-    var body: some View {
-        List {
-            Section("Storage") {
-                HStack {
-                    Text("Used Space")
-                    Spacer()
-                    Text(storageUsed)
-                        .foregroundColor(.secondary)
-                }
-                
-                Button("Clear Cache") {
-                    showingClearCache = true
-                }
-                
-                Button("Optimize Storage") {
-                    // TODO: Implement storage optimization
-                }
-            }
-            
-            Section("File Organization") {
-                NavigationLink("Organize by Author") {
-                    // TODO: Implement file organization
-                    Text("File Organization Options")
-                }
-                
-                NavigationLink("Duplicate Detection") {
-                    // TODO: Implement duplicate detection
-                    Text("Duplicate Detection")
-                }
-            }
-        }
-        .navigationTitle("File Management")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            calculateStorageUsed()
-        }
-        .alert("Clear Cache", isPresented: $showingClearCache) {
-            Button("Clear", role: .destructive) {
-                clearCache()
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This will clear temporary files and thumbnails. Your audiobooks will not be affected.")
-        }
-    }
-    
-    private func calculateStorageUsed() {
-        // TODO: Implement actual storage calculation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            storageUsed = "1.2 GB"
-        }
-    }
-    
-    private func clearCache() {
-        // TODO: Implement cache clearing
-    }
-}
 
-struct AppearanceSettingsView: View {
-    @AppStorage("colorScheme") private var colorScheme = "System"
-    @AppStorage("accentColor") private var accentColor = "Blue"
-    @AppStorage("showArtwork") private var showArtwork = true
-    @AppStorage("gridSize") private var gridSize = "Medium"
-    
-    let colorSchemes = ["System", "Light", "Dark"]
-    let accentColors = ["Blue", "Purple", "Green", "Orange", "Red"]
-    let gridSizes = ["Small", "Medium", "Large"]
-    
-    var body: some View {
-        List {
-            Section("Theme") {
-                Picker("Appearance", selection: $colorScheme) {
-                    ForEach(colorSchemes, id: \.self) { scheme in
-                        Text(scheme).tag(scheme)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .listRowInsets(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
-                
-                Picker("Accent Color", selection: $accentColor) {
-                    ForEach(accentColors, id: \.self) { color in
-                        Text(color).tag(color)
-                    }
-                }
-            }
-            
-            Section("Library Display") {
-                Toggle("Show Artwork", isOn: $showArtwork)
-                
-                Picker("Grid Size", selection: $gridSize) {
-                    ForEach(gridSizes, id: \.self) { size in
-                        Text(size).tag(size)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .listRowInsets(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
-            }
-        }
-        .navigationTitle("Appearance")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
 
 
 
