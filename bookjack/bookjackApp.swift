@@ -12,14 +12,37 @@ import SwiftData
 struct bookjackApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Audiobook.self,
+            Chapter.self,
+            Playlist.self,
+            PlaybackSession.self,
+            AudiobookFolder.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        
+        // Create the Application Support directory if it doesn't exist
+        let fileManager = FileManager.default
+        let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        
+        do {
+            try fileManager.createDirectory(at: appSupportURL, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            print("Failed to create Application Support directory: \(error)")
+        }
+        
+        let storeURL = appSupportURL.appendingPathComponent("BookJack.sqlite")
+        let modelConfiguration = ModelConfiguration(url: storeURL, allowsSave: true)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            print("Could not create ModelContainer: \(error)")
+            // Fallback to in-memory store
+            let fallbackConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            do {
+                return try ModelContainer(for: schema, configurations: [fallbackConfiguration])
+            } catch {
+                fatalError("Could not create fallback ModelContainer: \(error)")
+            }
         }
     }()
 
