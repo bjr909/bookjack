@@ -10,15 +10,9 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("defaultPlaybackSpeed") private var defaultPlaybackSpeed: Double = 1.0
     @AppStorage("smartRewindEnabled") private var smartRewindEnabled = true
-    @AppStorage("volumeBoostEnabled") private var volumeBoostEnabled = false
-    @AppStorage("autoBookmarkEnabled") private var autoBookmarkEnabled = true
-    @AppStorage("skipSilenceEnabled") private var skipSilenceEnabled = false
-
-
-    @AppStorage("hardcoverEnabled") private var hardcoverEnabled = false
     
-
     @State private var showingAbout = false
+    @State private var showingClearProgress = false
     
     var body: some View {
         NavigationStack {
@@ -35,47 +29,30 @@ struct SettingsView: View {
                     Slider(value: $defaultPlaybackSpeed, in: 0.5...3.0, step: 0.1)
                         .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     
-                    Toggle("Smart Rewind", isOn: $smartRewindEnabled)
-                    
-                    Toggle("Volume Boost", isOn: $volumeBoostEnabled)
-                    
-                    Toggle("Auto Bookmark", isOn: $autoBookmarkEnabled)
-                    
-                    Toggle("Skip Silence", isOn: $skipSilenceEnabled)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Toggle("Smart Rewind", isOn: $smartRewindEnabled)
+                        Text("Automatically rewinds a few seconds when resuming playback")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // Library Settings
                 Section("Library") {
-                    NavigationLink("Import Settings") {
-                        ImportSettingsView()
-                    }
-                    
                     NavigationLink("File Management") {
                         FileManagementView()
                     }
                     
                     Button("Clear All Progress") {
-                        // TODO: Implement with confirmation
+                        showingClearProgress = true
                     }
                     .foregroundColor(.red)
-                }
-                
-                // Sync Settings
-                Section("Sync & Backup") {
-                    Toggle("iCloud Sync", isOn: .constant(true))
-                        .disabled(true) // TODO: Implement iCloud sync
-                    
-                    Toggle("Hardcover.app Integration", isOn: $hardcoverEnabled)
                 }
                 
                 // Interface Settings
                 Section("Interface") {
                     NavigationLink("Appearance") {
                         AppearanceSettingsView()
-                    }
-                    
-                    NavigationLink("Accessibility") {
-                        AccessibilitySettingsView()
                     }
                 }
                 
@@ -95,56 +72,27 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
+            .alert("Clear All Progress", isPresented: $showingClearProgress) {
+                Button("Clear All", role: .destructive) {
+                    clearAllProgress()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will reset the listening progress for all audiobooks. This action cannot be undone.")
+            }
         }
+    }
+    
+    private func clearAllProgress() {
+        // TODO: Implement clearing all progress
+        print("Clearing all progress...")
     }
 }
 
-struct ImportSettingsView: View {
-    @AppStorage("autoImportEnabled") private var autoImportEnabled = true
-    @AppStorage("extractMetadataEnabled") private var extractMetadataEnabled = true
-    @AppStorage("generateChaptersEnabled") private var generateChaptersEnabled = true
-    @AppStorage("importQuality") private var importQuality = "High"
-    
-    let qualityOptions = ["Low", "Medium", "High", "Lossless"]
-    
-    var body: some View {
-        List {
-            Section("Import Behavior") {
-                Toggle("Auto-import from Files", isOn: $autoImportEnabled)
-                
-                Toggle("Extract Metadata", isOn: $extractMetadataEnabled)
-                
-                Toggle("Generate Chapters", isOn: $generateChaptersEnabled)
-            }
-            
-            Section("Quality") {
-                Picker("Import Quality", selection: $importQuality) {
-                    ForEach(qualityOptions, id: \.self) { quality in
-                        Text(quality).tag(quality)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .listRowInsets(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
-            }
-            
-            Section("File Types") {
-                HStack {
-                    Text("Supported Formats")
-                    Spacer()
-                    Text("M4B, M4A, MP3, FLAC")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .navigationTitle("Import Settings")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
+
 
 struct FileManagementView: View {
     @State private var storageUsed: String = "Calculating..."
@@ -253,80 +201,98 @@ struct AppearanceSettingsView: View {
     }
 }
 
-struct AccessibilitySettingsView: View {
-    @AppStorage("largeText") private var largeText = false
-    @AppStorage("highContrast") private var highContrast = false
-    @AppStorage("voiceOverEnabled") private var voiceOverEnabled = true
-    @AppStorage("hapticFeedback") private var hapticFeedback = true
-    
-    var body: some View {
-        List {
-            Section("Text & Display") {
-                Toggle("Large Text", isOn: $largeText)
-                
-                Toggle("High Contrast", isOn: $highContrast)
-            }
-            
-            Section("Interaction") {
-                Toggle("VoiceOver Support", isOn: $voiceOverEnabled)
-                
-                Toggle("Haptic Feedback", isOn: $hapticFeedback)
-            }
-            
-            Section("Controls") {
-                Text("Gesture Controls")
-                Text("• Tap artwork to play/pause")
-                Text("• Swipe left/right to skip")
-                Text("• Long press for context menu")
-            }
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-        .navigationTitle("Accessibility")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
+
 
 struct HelpView: View {
     var body: some View {
         List {
             Section("Getting Started") {
                 NavigationLink("Importing Audiobooks") {
-                    Text("How to import audiobooks...")
+                    HelpDetailView(
+                        title: "Importing Audiobooks",
+                        content: """
+                        To import audiobooks to BookJack:
+                        
+                        1. Tap the + button in the Library
+                        2. Select "Import Options"
+                        3. Choose "Import from Files"
+                        4. Select your audiobook files
+                        
+                        Supported formats: M4B, M4A, MP3, FLAC
+                        ZIP archives containing audiobook folders are also supported.
+                        """
+                    )
                 }
                 
-
-                
                 NavigationLink("Player Controls") {
-                    Text("Understanding the player interface...")
+                    HelpDetailView(
+                        title: "Player Controls",
+                        content: """
+                        Basic Controls:
+                        • Tap artwork to play/pause
+                        • Use the progress slider to skip to different parts
+                        • Tap chapter title to view all chapters
+                        • Swipe down on full player to return to library
+                        
+                        Speed Control:
+                        • Tap the speed button to adjust playback speed
+                        • Range from 0.5× to 3.0× speed
+                        
+                        Sleep Timer:
+                        • Set a timer to automatically pause playback
+                        • Perfect for listening before bed
+                        """
+                    )
                 }
             }
             
             Section("Troubleshooting") {
-                NavigationLink("Playback Issues") {
-                    Text("Common playback problems and solutions...")
-                }
-                
-                NavigationLink("Import Problems") {
-                    Text("File import troubleshooting...")
-                }
-                
-                NavigationLink("Sync Issues") {
-                    Text("Cloud sync troubleshooting...")
-                }
-            }
-            
-            Section("Contact") {
-                Button("Send Feedback") {
-                    // TODO: Implement feedback
-                }
-                
-                Button("Report Bug") {
-                    // TODO: Implement bug reporting
+                NavigationLink("Common Issues") {
+                    HelpDetailView(
+                        title: "Common Issues",
+                        content: """
+                        Playback Problems:
+                        • Ensure your audiobook files are not corrupted
+                        • Try restarting the app if playback stops unexpectedly
+                        • Check that your device has sufficient storage space
+                        
+                        Import Issues:
+                        • Make sure files are in supported formats (M4B, M4A, MP3, FLAC)
+                        • Large files may take longer to import
+                        • Ensure files are not DRM-protected
+                        
+                        Performance:
+                        • Clear cache in File Management if the app feels slow
+                        • Restart the app periodically for optimal performance
+                        """
+                    )
                 }
             }
         }
         .navigationTitle("Help & FAQ")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct HelpDetailView: View {
+    let title: String
+    let content: String
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(title)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text(content)
+                    .font(.body)
+                
+                Spacer()
+            }
+            .padding()
+        }
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -394,17 +360,22 @@ struct PrivacyPolicyView: View {
                     Text("Data Collection")
                         .font(.headline)
                     
-                    Text("BookJack does not collect any personal data. All audiobook files and listening progress are stored locally on your device.")
+                    Text("BookJack does not collect, store, or transmit any personal data. All audiobook files and listening progress are stored locally on your device.")
                     
-                    Text("iCloud Sync")
+                    Text("File Storage")
                         .font(.headline)
                     
-                    Text("When enabled, your library and progress data are synced through your personal iCloud account. This data is encrypted and only accessible to you.")
+                    Text("Your audiobook files are stored securely in the app's private storage area on your device. Only BookJack can access these files.")
                     
-                    Text("Third-Party Services")
+                    Text("Analytics")
                         .font(.headline)
                     
-                    Text("BookJack may integrate with optional third-party services like Jellyfin servers. Data shared with these services is subject to their respective privacy policies.")
+                    Text("BookJack does not use any analytics or tracking services. Your listening habits and preferences remain completely private.")
+                    
+                    Text("Contact")
+                        .font(.headline)
+                    
+                    Text("If you have any questions about this privacy policy, please contact us through the App Store.")
                 }
                 
                 Spacer()
