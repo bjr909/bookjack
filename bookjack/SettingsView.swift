@@ -13,11 +13,11 @@ struct SettingsView: View {
     @AppStorage("volumeBoostEnabled") private var volumeBoostEnabled = false
     @AppStorage("autoBookmarkEnabled") private var autoBookmarkEnabled = true
     @AppStorage("skipSilenceEnabled") private var skipSilenceEnabled = false
-    @AppStorage("jellyfinServerURL") private var jellyfinServerURL = ""
-    @AppStorage("jellyfinUsername") private var jellyfinUsername = ""
+
+
     @AppStorage("hardcoverEnabled") private var hardcoverEnabled = false
     
-    @State private var showingJellyfinSetup = false
+
     @State private var showingAbout = false
     
     var body: some View {
@@ -65,16 +65,6 @@ struct SettingsView: View {
                     Toggle("iCloud Sync", isOn: .constant(true))
                         .disabled(true) // TODO: Implement iCloud sync
                     
-                    Button("Jellyfin Server") {
-                        showingJellyfinSetup = true
-                    }
-                    
-                    if !jellyfinServerURL.isEmpty {
-                        Text("Connected to: \(jellyfinServerURL)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
                     Toggle("Hardcover.app Integration", isOn: $hardcoverEnabled)
                 }
                 
@@ -105,9 +95,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .sheet(isPresented: $showingJellyfinSetup) {
-                JellyfinSetupView()
-            }
+
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
@@ -307,9 +295,7 @@ struct HelpView: View {
                     Text("How to import audiobooks...")
                 }
                 
-                NavigationLink("Using Playlists") {
-                    Text("How to create and manage playlists...")
-                }
+
                 
                 NavigationLink("Player Controls") {
                     Text("Understanding the player interface...")

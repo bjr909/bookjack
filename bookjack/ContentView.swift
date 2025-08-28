@@ -20,11 +20,6 @@ struct ContentView: View {
                 Label("Library", systemImage: "books.vertical")
             }
             
-            PlaylistsView()
-                .tabItem {
-                    Label("Playlists", systemImage: "music.note.list")
-                }
-            
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gear")

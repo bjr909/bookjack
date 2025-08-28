@@ -193,6 +193,14 @@ struct FullPlayerView: View {
                 Spacer()
             }
             .padding()
+            .gesture(
+                DragGesture()
+                    .onEnded { gesture in
+                        if gesture.translation.height > 100 && gesture.velocity.height > 500 {
+                            dismiss()
+                        }
+                    }
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

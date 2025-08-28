@@ -47,7 +47,6 @@ struct LibraryView: View {
     
     @State private var showingImportOptions = false
     @State private var showingFilePicker = false
-    @State private var showingJellyfinSetup = false
     @State private var searchText = ""
     @State private var sortOrder: SortOrder = .dateAdded
     @State private var showingOnlyUnfinished = false
@@ -168,7 +167,9 @@ struct LibraryView: View {
                 
                 // Audiobooks grid
                 if filteredAudiobooks.isEmpty && folders.isEmpty {
+                    Spacer()
                     EmptyLibraryView(showingImportOptions: $showingImportOptions)
+                    Spacer()
                 } else {
                     ScrollView {
                         LazyVGrid(columns: [
@@ -224,9 +225,6 @@ struct LibraryView: View {
                         Button("Import Options") {
                             showingImportOptions = true
                         }
-                        Button("Browse Files") {
-                            showingFilePicker = true
-                        }
                         Button("New Folder") {
                             showingNewFolderAlert = true
                         }
@@ -237,8 +235,7 @@ struct LibraryView: View {
             }
             .sheet(isPresented: $showingImportOptions) {
                 ImportOptionsView(
-                    showingFilePicker: $showingFilePicker,
-                    showingJellyfinSetup: $showingJellyfinSetup
+                    showingFilePicker: $showingFilePicker
                 )
             }
             .fileImporter(
@@ -255,9 +252,7 @@ struct LibraryView: View {
             ) { result in
                 handleFileImport(result)
             }
-            .sheet(isPresented: $showingJellyfinSetup) {
-                JellyfinSetupView()
-            }
+
             .fullScreenCover(isPresented: $showingFullPlayer) {
                 FullPlayerView()
             }

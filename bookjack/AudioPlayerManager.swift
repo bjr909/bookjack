@@ -338,7 +338,7 @@ extension AudioPlayerManager: AVAudioPlayerDelegate {
             currentAudiobook?.currentPosition = duration
         }
         
-        // TODO: Auto-play next item in playlist if enabled
+
     }
     
     func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {

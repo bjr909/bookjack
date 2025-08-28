@@ -23,7 +23,6 @@ final class Audiobook {
     var fileURL: URL
     var playbackSpeed: Float
     var chapters: [Chapter]
-    var playlists: [Playlist]
     var folder: AudiobookFolder?
     
     init(title: String, author: String, fileURL: URL, duration: TimeInterval = 0) {
@@ -39,7 +38,6 @@ final class Audiobook {
         self.artworkData = nil
         self.playbackSpeed = 1.0
         self.chapters = []
-        self.playlists = []
         self.folder = nil
     }
     
@@ -78,33 +76,7 @@ final class Chapter {
     }
 }
 
-@Model
-final class Playlist {
-    var id: UUID
-    var name: String
-    var dateCreated: Date
-    var audiobooks: [Audiobook]
-    var currentIndex: Int
-    var isAutoPlay: Bool
-    
-    init(name: String) {
-        self.id = UUID()
-        self.name = name
-        self.dateCreated = Date()
-        self.audiobooks = []
-        self.currentIndex = 0
-        self.isAutoPlay = true
-    }
-    
-    var currentAudiobook: Audiobook? {
-        guard currentIndex >= 0 && currentIndex < audiobooks.count else { return nil }
-        return audiobooks[currentIndex]
-    }
-    
-    var nextUnfinishedAudiobook: Audiobook? {
-        return audiobooks.first { !$0.isFinished }
-    }
-}
+
 
 @Model
 final class AudiobookFolder {

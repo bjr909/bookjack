@@ -14,7 +14,6 @@ struct bookjackApp: App {
         let schema = Schema([
             Audiobook.self,
             Chapter.self,
-            Playlist.self,
             PlaybackSession.self,
             AudiobookFolder.self,
         ])
