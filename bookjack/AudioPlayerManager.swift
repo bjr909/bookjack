@@ -9,6 +9,7 @@ import Foundation
 import AVFoundation
 import MediaPlayer
 import Combine
+import SwiftUI
 
 class AudioPlayerManager: NSObject, ObservableObject {
     static let shared = AudioPlayerManager()
@@ -27,7 +28,14 @@ class AudioPlayerManager: NSObject, ObservableObject {
     @Published var currentChapter: Chapter?
     @Published var sleepTimerRemaining: TimeInterval = 0
     
-    private let smartRewindSeconds: TimeInterval = 30
+    // Settings
+    @AppStorage("defaultPlaybackSpeed") private var defaultPlaybackSpeed: Double = 1.0
+    @AppStorage("smartRewindEnabled") private var smartRewindEnabled = true
+    @AppStorage("smartRewindSeconds") private var smartRewindSecondsSettings: Double = 30
+    
+    private var smartRewindSeconds: TimeInterval { 
+        smartRewindEnabled ? smartRewindSecondsSettings : 30 
+    }
     
     override init() {
         super.init()
@@ -147,7 +155,8 @@ class AudioPlayerManager: NSObject, ObservableObject {
             
             duration = player?.duration ?? 0
             currentTime = audiobook.currentPosition
-            playbackRate = audiobook.playbackSpeed
+            // Use audiobook's saved speed, or default if it's 1.0 (not set)
+            playbackRate = audiobook.playbackSpeed == 1.0 ? Float(defaultPlaybackSpeed) : audiobook.playbackSpeed
             
             updateNowPlayingInfo()
             loadChapters()
@@ -219,8 +228,8 @@ class AudioPlayerManager: NSObject, ObservableObject {
     }
     
     func skipBackward(_ seconds: TimeInterval = 30) {
-        // Smart rewind: go back extra if we just started playing
-        let rewindTime = isPlaying && currentTime < smartRewindSeconds ? smartRewindSeconds : seconds
+        // Smart rewind: go back extra if we just started playing and smart rewind is enabled
+        let rewindTime = smartRewindEnabled && isPlaying && currentTime < smartRewindSeconds ? smartRewindSeconds : seconds
         seek(to: currentTime - rewindTime)
     }
     

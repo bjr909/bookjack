@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct bookjackApp: App {
+    @AppStorage("colorScheme") private var colorScheme: String = "system"
+    @AppStorage("accentColor") private var accentColor: String = "blue"
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Audiobook.self,
@@ -48,7 +50,20 @@ struct bookjackApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(colorScheme == "system" ? nil : (colorScheme == "dark" ? .dark : .light))
+                .accentColor(accentColorValue)
         }
         .modelContainer(sharedModelContainer)
+    }
+    
+    private var accentColorValue: Color {
+        switch accentColor {
+        case "purple": return .purple
+        case "green": return .green
+        case "orange": return .orange
+        case "red": return .red
+        case "pink": return .pink
+        default: return .blue
+        }
     }
 }

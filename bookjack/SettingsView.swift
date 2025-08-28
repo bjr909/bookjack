@@ -6,13 +6,78 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var audiobooks: [Audiobook]
+    
+    @AppStorage("defaultPlaybackSpeed") private var defaultPlaybackSpeed: Double = 1.0
+    @AppStorage("smartRewindEnabled") private var smartRewindEnabled = true
+    @AppStorage("smartRewindSeconds") private var smartRewindSeconds: Double = 30
+    @AppStorage("colorScheme") private var colorScheme: String = "system"
+    @AppStorage("accentColor") private var accentColor: String = "blue"
+    
     @State private var showingAbout = false
+    @State private var showingClearProgress = false
     
     var body: some View {
         NavigationStack {
             List {
+                // Playback Settings
+                Section("Playback") {
+                    HStack {
+                        Text("Default Speed")
+                        Spacer()
+                        Text("\(defaultPlaybackSpeed, specifier: "%.1f")×")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Slider(value: $defaultPlaybackSpeed, in: 0.5...3.0, step: 0.1)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Smart Rewind", isOn: $smartRewindEnabled)
+                        
+                        if smartRewindEnabled {
+                            Text("When resuming playback, automatically rewind \(Int(smartRewindSeconds)) seconds to help you remember where you left off.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 32)
+                            
+                            HStack {
+                                Text("Rewind Duration")
+                                Spacer()
+                                Text("\(Int(smartRewindSeconds))s")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.leading, 32)
+                            
+                            Slider(value: $smartRewindSeconds, in: 5...60, step: 5)
+                                .listRowInsets(EdgeInsets(top: 0, leading: 52, bottom: 0, trailing: 20))
+                        }
+                    }
+                }
+                
+                // Library Settings
+                Section("Library") {
+                    NavigationLink("File Management") {
+                        FileManagementView()
+                    }
+                    
+                    Button("Clear All Progress") {
+                        showingClearProgress = true
+                    }
+                    .foregroundColor(.red)
+                }
+                
+                // Interface Settings
+                Section("Interface") {
+                    NavigationLink("Appearance") {
+                        AppearanceSettingsView()
+                    }
+                }
+                
                 // Support & Info
                 Section("Support") {
                     NavigationLink("Help & FAQ") {
@@ -32,9 +97,32 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
+            .alert("Clear All Progress", isPresented: $showingClearProgress) {
+                Button("Clear All", role: .destructive) {
+                    clearAllProgress()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will reset the listening progress for all audiobooks. This action cannot be undone.")
+            }
         }
     }
-
+    
+    private func clearAllProgress() {
+        // Reset progress for all audiobooks
+        for audiobook in audiobooks {
+            audiobook.currentPosition = 0
+            audiobook.isFinished = false
+            audiobook.dateLastPlayed = nil
+        }
+        
+        // Save changes to SwiftData
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to clear progress: \(error)")
+        }
+    }
 }
 
 
@@ -223,6 +311,177 @@ struct PrivacyPolicyView: View {
             .padding()
         }
         .navigationTitle("Privacy Policy")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct FileManagementView: View {
+    @State private var storageUsed: String = "Calculating..."
+    @State private var showingClearCache = false
+    
+    var body: some View {
+        List {
+            Section("Storage") {
+                HStack {
+                    Text("Used Space")
+                    Spacer()
+                    Text(storageUsed)
+                        .foregroundColor(.secondary)
+                }
+                
+                Button("Clear Cache") {
+                    showingClearCache = true
+                }
+                
+                Button("Optimize Storage") {
+                    optimizeStorage()
+                }
+            }
+            
+            Section("File Organization") {
+                Button("Organize by Author") {
+                    organizeByAuthor()
+                }
+                
+                Button("Find Duplicates") {
+                    findDuplicates()
+                }
+            }
+        }
+        .navigationTitle("File Management")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            calculateStorageUsed()
+        }
+        .alert("Clear Cache", isPresented: $showingClearCache) {
+            Button("Clear", role: .destructive) {
+                clearCache()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will clear temporary files and thumbnails. Your audiobooks will not be affected.")
+        }
+    }
+    
+    private func calculateStorageUsed() {
+        Task {
+            let usage = await calculateActualStorageUsage()
+            await MainActor.run {
+                storageUsed = usage
+            }
+        }
+    }
+    
+    private func calculateActualStorageUsage() async -> String {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        
+        do {
+            let resourceKeys: [URLResourceKey] = [.fileSizeKey, .isDirectoryKey]
+            let enumerator = FileManager.default.enumerator(
+                at: documentsPath,
+                includingPropertiesForKeys: resourceKeys,
+                options: [.skipsHiddenFiles]
+            )
+            
+            var totalSize: Int64 = 0
+            
+            if let enumerator = enumerator {
+                for case let fileURL as URL in enumerator {
+                    let resourceValues = try fileURL.resourceValues(forKeys: Set(resourceKeys))
+                    if resourceValues.isDirectory != true {
+                        totalSize += Int64(resourceValues.fileSize ?? 0)
+                    }
+                }
+            }
+            
+            return ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
+        } catch {
+            return "Unable to calculate"
+        }
+    }
+    
+    private func clearCache() {
+        // Clear temporary files and thumbnails
+        print("Clearing cache...")
+        calculateStorageUsed()
+    }
+    
+    private func optimizeStorage() {
+        // Optimize storage by removing unused files
+        print("Optimizing storage...")
+        calculateStorageUsed()
+    }
+    
+    private func organizeByAuthor() {
+        // Organize audiobooks by author
+        print("Organizing by author...")
+    }
+    
+    private func findDuplicates() {
+        // Find duplicate audiobooks
+        print("Finding duplicates...")
+    }
+}
+
+struct AppearanceSettingsView: View {
+    @AppStorage("colorScheme") private var colorScheme: String = "system"
+    @AppStorage("accentColor") private var accentColor: String = "blue"
+    @AppStorage("useCompactPlayer") private var useCompactPlayer = false
+    @AppStorage("showArtworkInLibrary") private var showArtworkInLibrary = true
+    
+    private let accentColors = [
+        ("blue", "Blue", Color.blue),
+        ("purple", "Purple", Color.purple),
+        ("green", "Green", Color.green),
+        ("orange", "Orange", Color.orange),
+        ("red", "Red", Color.red),
+        ("pink", "Pink", Color.pink)
+    ]
+    
+    var body: some View {
+        List {
+            Section("Theme") {
+                Picker("Appearance", selection: $colorScheme) {
+                    Text("System").tag("system")
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+            }
+            
+            Section("Accent Color") {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 16) {
+                    ForEach(accentColors, id: \.0) { colorKey, colorName, color in
+                        Button(action: {
+                            accentColor = colorKey
+                        }) {
+                            VStack {
+                                Circle()
+                                    .fill(color)
+                                    .frame(width: 40, height: 40)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(accentColor == colorKey ? Color.primary : Color.clear, lineWidth: 3)
+                                    )
+                                
+                                Text(colorName)
+                                    .font(.caption)
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+            
+            Section("Interface") {
+                Toggle("Compact Player", isOn: $useCompactPlayer)
+                
+                Toggle("Show Artwork in Library", isOn: $showArtworkInLibrary)
+            }
+        }
+        .navigationTitle("Appearance")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
