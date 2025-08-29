@@ -200,16 +200,15 @@ struct LibraryView: View {
                                 )
                                 .onTapGesture {
                                     if audioPlayer.currentAudiobook?.id == audiobook.id {
-                                        // If this book is already loaded, just play it and show player
+                                        // If this book is already loaded, just resume if paused
                                         if !audioPlayer.isPlaying {
                                             audioPlayer.play()
                                         }
-                                        showingFullPlayer = true
                                     } else {
-                                        // Load new book and show player
+                                        // Load new book (auto-plays) and show player
                                         audioPlayer.loadAudiobook(audiobook)
-                                        showingFullPlayer = true
                                     }
+                                    showingFullPlayer = true
                                 }
                             }
                         }
@@ -806,9 +805,8 @@ struct AudiobookCardView: View {
                         audioPlayer.play()
                     }
                 } else {
-                    // Load new book and start playing
+                    // Load new book (auto-plays)
                     audioPlayer.loadAudiobook(audiobook)
-                    audioPlayer.play()
                 }
             }) {
                 Label(

@@ -37,4 +37,13 @@ An iOS audio book player app built with SwiftUI.
 
 ## License
 
-This project is for personal use and development.
+This project is licensed under the MIT License. See LICENSE file for details.
+
+## App Store Compliance
+
+This app complies with App Store guidelines:
+- No DRM circumvention
+- Respects copyright laws
+- User-generated content only
+- No illegal content distribution
+- Privacy-focused design

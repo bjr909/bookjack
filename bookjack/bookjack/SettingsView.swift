@@ -91,6 +91,10 @@ struct SettingsView: View {
                     NavigationLink("Privacy Policy") {
                         PrivacyPolicyView()
                     }
+                    
+                    NavigationLink("Terms of Service") {
+                        TermsOfServiceView()
+                    }
                 }
             }
             .navigationTitle("Settings")
@@ -311,6 +315,59 @@ struct PrivacyPolicyView: View {
             .padding()
         }
         .navigationTitle("Privacy Policy")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct TermsOfServiceView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Terms of Service")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("Last updated: \(Date().formatted(date: .abbreviated, time: .omitted))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Group {
+                    Text("Acceptance of Terms")
+                        .font(.headline)
+                    
+                    Text("By downloading and using BookJack, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the app.")
+                    
+                    Text("App Usage")
+                        .font(.headline)
+                    
+                    Text("BookJack is designed for personal use to play audiobook files that you own or have the right to use. You are responsible for ensuring you have the legal right to play any content through this app.")
+                    
+                    Text("Content Responsibility")
+                        .font(.headline)
+                    
+                    Text("You are solely responsible for the audiobook content you import and play through BookJack. The app does not provide, host, or distribute any copyrighted content.")
+                    
+                    Text("Prohibited Uses")
+                        .font(.headline)
+                    
+                    Text("You may not use BookJack to play content that infringes on copyright or other intellectual property rights. You may not use the app for any illegal purposes.")
+                    
+                    Text("Disclaimer")
+                        .font(.headline)
+                    
+                    Text("BookJack is provided 'as is' without warranties of any kind. The developer is not responsible for any issues arising from the use of the app or your audiobook content.")
+                    
+                    Text("Contact")
+                        .font(.headline)
+                    
+                    Text("If you have any questions about these terms, please contact us through the App Store.")
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+        .navigationTitle("Terms of Service")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

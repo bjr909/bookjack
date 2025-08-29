@@ -161,6 +161,9 @@ class AudioPlayerManager: NSObject, ObservableObject {
             updateNowPlayingInfo()
             loadChapters()
             
+            // Auto-play when loading a new audiobook
+            play()
+            
         } catch {
             print("Failed to load audiobook: \(error)")
         }
